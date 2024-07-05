@@ -1,0 +1,56 @@
+// Expanded Detailed Pipeline
+digraph {
+	rankdir=TB
+	Start [label=Start shape=oval]
+	LoadData [label="Load Data
+(data_area, type)" shape=parallelogram]
+	Decision [label="Model Type?" shape=diamond]
+	TrainFFNN [label="Train FFNN Model
+(80% Data)" shape=box]
+	TrainLSTM [label="Train LSTM Model
+(80% Data)" shape=box]
+	CorrectEnsembles [label="Correct Ensembles" shape=box]
+	RunTAQR [label="Run TAQR Algo" color=lightgrey shape=box style="filled, rounded"]
+	CalculateScores [label="Calculate Scores
+(QSS, CRPS, Variogram)" shape=box]
+	SaveResults [label="Save Results and Model" shape=box]
+	Repeat [label="Repeat for All Data Sources" shape=box]
+	Analyze [label="Analyze Results" shape=box]
+	End [label=End shape=oval]
+	InputTimeSteps [label="Input Timesteps" shape=box]
+	Start -> LoadData
+	Decision -> TrainFFNN [label=FFNN]
+	Decision -> TrainLSTM [label=LSTM]
+	TrainLSTM -> InputTimeSteps
+	InputTimeSteps -> PreprocessLSTM
+	SaveResults -> Repeat
+	Repeat -> Analyze
+	Analyze -> End
+	LoadDataDetail [label="Load Data Details" shape=box]
+	LoadData -> LoadDataDetail
+	LoadDataDetail -> Decision
+	PreprocessFFNN [label="Preprocess Data (FFNN)" shape=box]
+	DefineQuantilesFFNN [label="Define All 50 Quantiles (FFNN)" shape=box]
+	TrainFFNN -> PreprocessFFNN
+	PreprocessFFNN -> DefineQuantilesFFNN
+	DefineQuantilesFFNN -> TrainModel
+	PreprocessLSTM [label="Preprocess Data 
+ With Lags (LSTM)" shape=box]
+	DefineQuantilesLSTM [label="Define 20 Quantiles (LSTM)" shape=box]
+	TrainModel [label="Train Model" shape=box]
+	PreprocessLSTM -> DefineQuantilesLSTM
+	DefineQuantilesLSTM -> TrainModel
+	TrainModel -> CorrectEnsembles
+	ConvertTensor [label="Convert to Tensor" shape=box]
+	UseTrainedModel [label="Use Trained Model" shape=box]
+	CorrectEnsembles -> ConvertTensor
+	ConvertTensor -> UseTrainedModel
+	UseTrainedModel -> RunTAQR
+	CleanNaNs [label="Clean NaNs" shape=box]
+	LoopQuantiles [label="Loop for Quantiles" shape=box]
+	RunTAQR -> CleanNaNs
+	CleanNaNs -> LoopQuantiles
+	LoopQuantiles -> CalculateScores
+	CalculateScores -> SaveResults
+	Repeat -> LoadData [label="Next Data Source"]
+}
